@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Zomby Waves: Ultimate Final</title>
+    <style>
+        body { margin: 0; background: #000; overflow: hidden; font-family: sans-serif; touch-action: none; color: #fff; user-select: none; }
+        canvas { display: block; }
+        
+        .ui-layer { 
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
+            display: flex; flex-direction: column; align-items: center; justify-content: center; 
+            z-index: 1000; 
+            background: radial-gradient(circle, #500 0%, #000 100%);
+        }
+
+        h1 { font-size: 48px; color: #f04; text-shadow: 0 0 20px #f04; margin: 0; font-style: italic; }
+        .credits { position: absolute; bottom: 15px; font-size: 13px; color: #999; text-align: center; line-height: 1.5; }
+        
+        .currency { font-size: 20px; color: #ff0; margin-bottom: 15px; background: rgba(255,255,0,0.1); padding: 5px 15px; border-radius: 20px; border: 1px solid rgba(255,255,0,0.3); }
+        .btn { 
+            padding: 15px; font-size: 18px; border: 2px solid rgba(255,255,255,0.1); border-radius: 12px; 
+            margin: 8px; font-weight: bold; width: 260px; cursor: pointer; pointer-events: auto; 
+            background: #222; color: #fff; transition: 0.1s;
+        }
+        .btn:active { transform: scale(0.95); }
+        .btn-play { background: #b00; box-shadow: 0 0 20px #f04; }
+        .btn-fs { background: #444; font-size: 14px; width: 180px; margin-top: 10px; }
+
+        .shop-list { width: 90%; max-width: 400px; max-height: 40vh; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; margin-bottom: 15px; background: rgba(0,0,0,0.3); padding: 10px; border-radius: 10px; }
+        .item-card { background: #111; border: 1px solid #333; padding: 12px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; }
+        .item-card.selected { border-color: #0ff; background: #1a2a2a; }
+        .buy-btn { padding: 10px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; min-width: 90px; }
+        .owned { background: #0f4; color: #000; }
+        .locked { background: #f04; color: #fff; }
+
+        .tab-btns { display: flex; gap: 5px; margin-bottom: 10px; }
+        .tab-btn { background: #222; border: 1px solid #444; color: #fff; padding: 8px 12px; border-radius: 8px; cursor: pointer; }
+        .tab-btn.active { background: #a0f; }
+
+        #game-ui { position: absolute; top: 10px; left: 10px; width: 95%; pointer-events: none; display: none; z-index: 500; }
+        .bar { width: 100%; height: 16px; background: #222; border-radius: 8px; overflow: hidden; margin-top: 5px; border: 1px solid #444; position: relative; }
+        #hp-fill { height: 100%; background: linear-gradient(90deg, #f04, #902); width: 100%; transition: 0.3s; }
+        #xp-fill { height: 100%; background: linear-gradient(90deg, #0f0, #060); width: 0%; transition: 0.4s; }
+        .bar-text { position: absolute; width: 100%; text-align: center; font-size: 11px; font-weight: bold; line-height: 16px; text-shadow: 1px 1px #000; }
+        
+        .skill-btn { position: absolute; bottom: 40px; right: 20px; width: 85px; height: 85px; background: rgba(0,0,0,0.7); border: 3px solid cyan; border-radius: 50%; display: none; justify-content: center; align-items: center; font-weight: bold; z-index: 2000; pointer-events: auto; }
+        .cooldown { opacity: 0.3; filter: grayscale(1); }
+        .upg-desc { font-size: 12px; color: #aaa; margin-top: 4px; font-weight: normal; }
+
+        #heal-fx { 
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
+            background: radial-gradient(circle, rgba(0,255,100,0) 25%, rgba(0,255,100,0.5) 100%); 
+            pointer-events: none; opacity: 0; z-index: 900; transition: opacity 0.6s ease-in-out;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="heal-fx"></div>
+
+    <div id="main-menu" class="ui-layer">
+        <h1>ZOMBY WAVES</h1>
+        <div class="currency">PTS: <span class="pts-val">0</span></div>
+        <button class="btn btn-play" onclick="startGame()">В БОЙ</button>
+        <button class="btn" style="background:#0af" onclick="showLayer('shop-page')">ГЕРОИ</button>
+        <button class="btn" style="background:#a0f" onclick="showSkins('shape')">МАГАЗИН</button>
+        <button class="btn btn-fs" onclick="toggleFullScreen()">ПОЛНЫЙ ЭКРАН</button>
+        <div class="credits">разработчик – @rodya_Koder<br>бета тестер – FghFopa</div>
+    </div>
+
+    <div id="shop-page" class="ui-layer" style="display:none;">
+        <h1>ГЕРОИ</h1>
+        <div class="shop-list" id="hero-items"></div>
+        <button class="btn" style="width:150px" onclick="showLayer('main-menu')">НАЗАД</button>
+    </div>
+
+    <div id="skin-page" class="ui-layer" style="display:none;">
+        <h1>МАГАЗИН</h1>
+        <div class="tab-btns">
+            <button class="tab-btn active" id="tab-shape" onclick="showSkins('shape')">ФОРМА</button>
+            <button class="tab-btn" id="tab-color" onclick="showSkins('color')">ЦВЕТ</button>
+            <button class="tab-btn" id="tab-bullet" onclick="showSkins('bullet')">ПУЛИ</button>
+        </div>
+        <div class="shop-list" id="skin-items"></div>
+        <button class="btn" style="width:150px" onclick="showLayer('main-menu')">НАЗАД</button>
+    </div>
+
+    <div id="game-ui">
+        <div style="display:flex; justify-content:space-between; font-weight:bold; margin-bottom:2px;">
+            <span>LVL <span id="lvl-val">1</span></span>
+            <span id="boss-timer" style="color:#ff0">БОСС: 60с</span>
+            <span id="score-val">0</span>
+        </div>
+        <div class="bar"><div id="hp-fill"></div><div class="bar-text" id="hp-text">0/0</div></div>
+        <div class="bar" style="height:10px; margin-top:3px;"><div id="xp-fill"></div><div class="bar-text" id="xp-text">0/0</div></div>
+    </div>
+
+    <div id="upgrade-menu" class="ui-layer" style="background: rgba(0,0,0,0.9); display:none;">
+        <h2 style="color:#0f0">LEVEL UP!</h2>
+        <div id="upgrade-list" style="display:flex; flex-direction:column; align-items:center;"></div>
+    </div>
+
+    <div id="death-screen" class="ui-layer" style="display:none;">
+        <h1>ТЫ ПОГИБ</h1>
+        <div id="death-info" style="margin-bottom: 10px;"></div>
+        <button class="btn btn-play" onclick="location.reload()">В МЕНЮ</button>
+    </div>
+
+    <div id="skill-btn" class="skill-btn"></div>
+    <canvas id="game"></canvas>
+
+<script>
+const HEROES = [
+    { id: 'survivor', name: 'SURVIVOR', hp: 100, spd: 3.5, rate: 30, dmg: 30, price: 0, desc: 'Базовый герой' },
+    { id: 'runner', name: 'RUNNER', hp: 80, spd: 4.8, rate: 28, dmg: 25, price: 150, desc: 'Очень быстрый' },
+    { id: 'tank', name: 'TANK', hp: 220, spd: 2.6, rate: 35, dmg: 35, price: 300, desc: 'Много здоровья' },
+    { id: 'petmaster', name: 'PET-MASTER', hp: 90, spd: 3.2, rate: 35, dmg: 20, price: 500, desc: 'Дрон-помощник' },
+    { id: 'medic', name: 'MEDIC', hp: 110, spd: 3.4, rate: 32, dmg: 25, price: 600, desc: 'Лечит 50% HP' },
+    { id: 'shielder', name: 'SHIELDER', hp: 130, spd: 3.1, rate: 35, dmg: 25, price: 700, desc: 'Защитный барьер' },
+    { id: 'shocker', name: 'SHOCKER', hp: 100, spd: 3.3, rate: 45, dmg: 22, price: 850, desc: 'Бьет по 3 целям' },
+    { id: 'military', name: 'MILITARY', hp: 120, spd: 3.2, rate: 25, dmg: 40, price: 1100, desc: 'Авиаудар' },
+    { id: 'seeker', name: 'SEEKER', hp: 100, spd: 3.6, rate: 30, dmg: 28, price: 1400, desc: 'Сбор опыта' },
+    { id: 'juggernaut', name: 'JUGGERNAUT', hp: 180, spd: 3.0, rate: 35, dmg: 40, price: 2000, desc: 'Режим ярости' }
+];
+
+const SKINS = {
+    shape: [{id:'circle', name:'Круг', price:0}, {id:'square', name:'Квадрат', price:200}, {id:'triangle', name:'Треугольник', price:300}, {id:'rhombus', name:'Ромб', price:400}, {id:'star', name:'Звезда', price:600}, {id:'hexagon', name:'Гексагон', price:700}],
+    color: [{id:'#fff', name:'Белый', price:0}, {id:'#0ff', name:'Циан', price:150}, {id:'#0f0', name:'Зеленый', price:150}, {id:'#ff0', name:'Золото', price:150}, {id:'#f0f', name:'Пурпур', price:200}, {id:'#f00', name:'Алый', price:200}],
+    bullet: [{id:'#ff0', name:'Желтый', price:0}, {id:'#f00', name:'Красный', price:100}, {id:'#0af', name:'Лед', price:150}, {id:'#0f0', name:'Кислота', price:200}, {id:'rainbow', name:'Радуга', price:1000}]
+};
+
+let data = JSON.parse(localStorage.getItem('zw_ultimate_v1')) || { pts: 0, owned: ['survivor'], sel: 'survivor', ownedSkins: ['circle', '#fff', '#ff0'], selShape: 'circle', selColor: '#fff', selBullet: '#ff0' };
+function save() { localStorage.setItem('zw_ultimate_v1', JSON.stringify(data)); }
+
+let canvas = document.getElementById('game'), ctx = canvas.getContext('2d');
+let state = "MENU", player, enemies = [], bullets = [], items = [], score = 0, startTime;
+let joy = { active: false, x: 0, y: 0, mx: 0, my: 0, touchId: null };
+let screenShake = 0, bossObj = null;
+
+function showLayer(id) {
+    document.querySelectorAll('.ui-layer').forEach(l => l.style.display = 'none');
+    if(id !== 'none') document.getElementById(id).style.display = 'flex';
+    if(id === 'shop-page') renderHeroShop();
+    document.querySelectorAll('.pts-val').forEach(el => el.innerText = data.pts);
+}
+
+function renderHeroShop() {
+    const list = document.getElementById('hero-items'); list.innerHTML = '';
+    HEROES.forEach(h => {
+        let isOwn = data.owned.includes(h.id), isSel = data.sel === h.id;
+        list.innerHTML += `<div class="item-card ${isSel?'selected':''}"><div><b>${h.name}</b><br><small>${h.desc}</small></div><button class="buy-btn ${isOwn?'owned':'locked'}" onclick="buyHero('${h.id}', ${h.price})">${isSel?'ВЫБРАН':(isOwn?'ВЫБРАТЬ':h.price)}</button></div>`;
+    });
+}
+function buyHero(id, pr) {
+    if(data.owned.includes(id)) data.sel = id;
+    else if(data.pts >= pr) { data.pts -= pr; data.owned.push(id); data.sel = id; }
+    save(); renderHeroShop();
+}
+
+function showSkins(type) {
+    showLayer('skin-page');
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('tab-'+type).classList.add('active');
+    const list = document.getElementById('skin-items'); list.innerHTML = '';
+    SKINS[type].forEach(s => {
+        let isOwn = data.ownedSkins.includes(s.id), isSel = (data.selShape===s.id||data.selColor===s.id||data.selBullet===s.id);
+        list.innerHTML += `<div class="item-card ${isSel?'selected':''}"><div><b>${s.name}</b></div><button class="buy-btn ${isOwn?'owned':'locked'}" onclick="buySkin('${type}', '${s.id}', ${s.price})">${isSel?'ВЫБРАН':(isOwn?'ВЫБРАТЬ':s.price)}</button></div>`;
+    });
+}
+function buySkin(type, id, pr) {
+    if(data.ownedSkins.includes(id)) { if(type==='shape') data.selShape=id; if(type==='color') data.selColor=id; if(type==='bullet') data.selBullet=id; }
+    else if(data.pts >= pr) { data.pts -= pr; data.ownedSkins.push(id); if(type==='shape') data.selShape=id; if(type==='color') data.selColor=id; if(type==='bullet') data.selBullet=id; }
+    save(); showSkins(type);
+}
+
+function startGame() {
+    let h = HEROES.find(x => x.id === data.sel);
+    player = { ...h, x: 2000, y: 2000, maxHp: h.hp, hp: h.hp, lvl: 1, xp: 0, xpNext: 100, timer: 0, baseSpd: h.spd, baseDmg: h.dmg, baseRate: h.rate, angle: 0, crit: 0.05, pierce: 1, killHeal: false, shieldActive: false, buffDmg: 1, buffSpd: 1, pet: {active: false, size: 0, angle: 0, timer: 0, shootTimer: 0}, isHuge: false };
+    showLayer('none');
+    document.getElementById('game-ui').style.display = 'block';
+    let sBtn = document.getElementById('skill-btn');
+    const activeSkills = ['military', 'juggernaut', 'medic', 'shielder'];
+    sBtn.style.display = activeSkills.includes(h.id) ? 'flex' : 'none';
+    sBtn.innerText = h.id === 'military' ? 'УДАР' : h.id === 'juggernaut' ? 'ЯРОСТЬ' : h.id === 'medic' ? 'ХИЛ' : 'ЩИТ';
+    sBtn.onclick = (e) => { e.stopPropagation(); useSkill(); };
+    state = "PLAYING"; score = 0; enemies = []; bullets = []; items = []; bossObj = null; startTime = Date.now();
+}
+
+function triggerHealEffect() {
+    let fx = document.getElementById('heal-fx'); fx.style.opacity = '1';
+    setTimeout(() => fx.style.opacity = '0', 600);
+}
+
+function useSkill() {
+    let btn = document.getElementById('skill-btn');
+    if (btn.classList.contains('cooldown')) return;
+    if (player.id === 'military') { screenShake = 40; enemies.slice(0, 15).forEach(en => bullets.push({x: en.x, y: en.y-400, vx: 0, vy: 18, d: 600, c: '#f40', isBomb: true, pierce: 99, hits:[]})); }
+    if (player.id === 'juggernaut') { player.dmg *= 2.5; player.spd *= 1.8; player.isHuge = true; setTimeout(() => { player.dmg = player.baseDmg; player.spd = player.baseSpd; player.isHuge = false; }, 6000); }
+    if (player.id === 'medic') { player.hp = Math.min(player.maxHp, player.hp + player.maxHp * 0.5); triggerHealEffect(); }
+    if (player.id === 'shielder') { player.shieldActive = true; setTimeout(() => player.shieldActive = false, 4000); }
+    btn.classList.add('cooldown');
+    setTimeout(() => btn.classList.remove('cooldown'), 12000);
+}
+
+function getNearestEnemy() {
+    let minDist = Infinity;
+    let target = null;
+    enemies.forEach(en => {
+        let d = Math.hypot(en.x - player.x, en.y - player.y);
+        if (d < minDist) { minDist = d; target = en; }
+    });
+    return target;
+}
+
+function update() {
+    if (state !== "PLAYING") return;
+    let elapsed = Date.now() - startTime;
+    let diff = 1 + elapsed / 60000;
+    
+    document.getElementById('hp-fill').style.width = (player.hp / player.maxHp * 100) + "%";
+    document.getElementById('hp-text').innerText = `${Math.ceil(player.hp)} / ${Math.ceil(player.maxHp)}`;
+    document.getElementById('xp-fill').style.width = (player.xp / player.xpNext * 100) + "%";
+    document.getElementById('xp-text').innerText = `${Math.floor(player.xp)} / ${Math.floor(player.xpNext)}`;
+    document.getElementById('lvl-val').innerText = player.lvl;
+    document.getElementById('score-val').innerText = score;
+
+    let timeLeft = 60 - Math.floor((elapsed / 1000) % 61);
+    if (timeLeft <= 0 && !bossObj) {
+        bossObj = { id: 'boss', x: player.x + 500, y: player.y + 500, hp: 5000*diff, maxHp: 5000*diff, size: 90, isBoss: true, spd: 1.4 };
+        enemies.push(bossObj);
+    }
+    document.getElementById('boss-timer').innerText = bossObj ? "BOSS!" : `БОСС: ${timeLeft}с`;
+
+    if (joy.active) {
+        let moveAngle = Math.atan2(joy.my, joy.mx);
+        player.x += Math.cos(moveAngle) * (player.spd * player.buffSpd);
+        player.y += Math.sin(moveAngle) * (player.spd * player.buffSpd);
+    }
+    player.x = Math.max(20, Math.min(3980, player.x));
+    player.y = Math.max(20, Math.min(3980, player.y));
+
+    // Авто-наведение
+    let nearest = getNearestEnemy();
+    if (nearest) player.angle = Math.atan2(nearest.y - player.y, nearest.x - player.x);
+
+    // Огонь в ближайшего
+    if (player.timer-- <= 0 && enemies.length > 0) {
+        if (nearest) {
+            let targets = (player.id === 'shocker') ? enemies.slice(0,3) : [nearest];
+            targets.forEach(t => {
+                let a = Math.atan2(t.y-player.y, t.x-player.x);
+                let isCrit = Math.random() < player.crit;
+                let col = data.selBullet === 'rainbow' ? `hsl(${Date.now()%360},100%,50%)` : data.selBullet;
+                bullets.push({x: player.x, y: player.y, vx: Math.cos(a)*15, vy: Math.sin(a)*15, d: player.dmg*(isCrit?2.5:1), c: isCrit?'#ff0':col, pierce: player.pierce, hits:[]});
+            });
+            player.timer = player.rate;
+        }
+    }
+
+    if (Math.random() < 0.08 * diff) {
+        let a = Math.random()*Math.PI*2;
+        enemies.push({id: Math.random(), x: player.x+Math.cos(a)*800, y: player.y+Math.sin(a)*800, hp: 80*diff, spd: 1.7+diff/4, size: 28});
+    }
+
+    enemies.forEach((en, i) => {
+        let a = Math.atan2(player.y-en.y, player.x-en.x);
+        en.x += Math.cos(a)*en.spd; en.y += Math.sin(a)*en.spd;
+        if(Math.hypot(player.x-en.x, player.y-en.y) < en.size+18) {
+            player.hp -= player.shieldActive ? 0.2 : 1.0; screenShake = 6;
+        }
+        if(en.hp <= 0) { 
+            enemies.splice(i,1); 
+            let reward = en.isBoss ? 2500 : 25; // УВЕЛИЧЕННАЯ НАГРАДА
+            score += reward; player.xp += 45; 
+            if(en.isBoss) bossObj = null;
+            if(player.killHeal && Math.random() < 0.25) { player.hp = Math.min(player.maxHp, player.hp + 8); triggerHealEffect(); }
+        }
+    });
+
+    bullets.forEach((b, bi) => {
+        b.x += b.vx; b.y += b.vy;
+        enemies.forEach(en => {
+            if(!b.hits.includes(en.id) && Math.hypot(en.x-b.x, en.y-b.y) < en.size+15) {
+                en.hp -= b.d; b.hits.push(en.id); b.pierce--;
+                if(b.pierce <= 0) bullets.splice(bi, 1);
+            }
+        });
+        if(Math.hypot(player.x-b.x, player.y-b.y) > 1500) bullets.splice(bi, 1);
+    });
+
+    if(player.xp >= player.xpNext) { player.lvl++; player.xp=0; player.xpNext*=1.5; showUpgradeMenu(); }
+    if(player.hp <= 0) { state="DEAD"; data.pts += Math.floor(score/5); save(); showLayer('death-screen'); document.getElementById('death-info').innerText = "Счет: " + score; }
+}
+
+function draw() {
+    canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+    ctx.fillStyle = '#000'; ctx.fillRect(0,0,canvas.width,canvas.height);
+    if(state === "PLAYING" || state === "UPGRADE") {
+        ctx.save();
+        let tx = canvas.width/2 - player.x, ty = canvas.height/2 - player.y;
+        if(screenShake > 0) { tx += (Math.random()-0.5)*screenShake; ty += (Math.random()-0.5)*screenShake; screenShake *= 0.94; }
+        ctx.translate(tx, ty);
+        ctx.strokeStyle='#f04'; ctx.lineWidth=10; ctx.strokeRect(0,0,4000,4000);
+        bullets.forEach(b => { ctx.fillStyle=b.c; ctx.beginPath(); ctx.arc(b.x,b.y,b.isBomb?50:8,0,Math.PI*2); ctx.fill(); });
+        enemies.forEach(en => { ctx.save(); ctx.translate(en.x, en.y); let a = Math.atan2(player.y-en.y, player.x-en.x); ctx.rotate(a); ctx.fillStyle=en.isBoss?'#f0f':'#f22'; ctx.fillRect(-en.size/2,-en.size/2,en.size,en.size); ctx.fillStyle='#fff'; ctx.fillRect(en.size/4,-en.size/3,6,6); ctx.fillRect(en.size/4,en.size/6,6,6); ctx.restore(); });
+        if(player.shieldActive) { ctx.save(); ctx.strokeStyle="#0af"; ctx.lineWidth=4; ctx.shadowBlur=15; ctx.shadowColor="#0af"; ctx.beginPath(); ctx.arc(player.x,player.y,65,0,Math.PI*2); ctx.stroke(); ctx.restore(); }
+        ctx.save(); ctx.translate(player.x, player.y); ctx.rotate(player.angle); ctx.fillStyle = data.selColor;
+        let s = player.isHuge ? 50 : 25; if(player.isHuge) { ctx.shadowBlur=20; ctx.shadowColor="#f40"; }
+        drawShape(0,0,s,data.selShape); ctx.restore(); ctx.restore();
+        if(joy.active) { ctx.fillStyle='rgba(255,255,255,0.1)'; ctx.beginPath(); ctx.arc(joy.x,joy.y,55,0,Math.PI*2); ctx.fill(); ctx.fillStyle='#fff'; ctx.beginPath(); ctx.arc(joy.x+joy.mx/2.5,joy.y+joy.my/2.5,18,0,Math.PI*2); ctx.fill(); }
+        update();
+    }
+    requestAnimationFrame(draw);
+}
+
+function drawShape(x, y, s, type) {
+    ctx.beginPath();
+    if(type==='circle') ctx.arc(x,y,s,0,Math.PI*2);
+    else if(type==='square') ctx.rect(x-s,y-s,s*2,s*2);
+    else if(type==='triangle') { ctx.moveTo(x,y-s); ctx.lineTo(x+s,y+s); ctx.lineTo(x-s,y+s); }
+    else if(type==='rhombus') { ctx.moveTo(x,y-s); ctx.lineTo(x+s,y); ctx.lineTo(x,y+s); ctx.lineTo(x-s,y); }
+    else if(type==='star') { for(let i=0;i<5;i++) { ctx.lineTo(x+Math.cos((18+i*72)/180*Math.PI)*s, y-Math.sin((18+i*72)/180*Math.PI)*s); ctx.lineTo(x+Math.cos((54+i*72)/180*Math.PI)*(s/2), y-Math.sin((54+i*72)/180*Math.PI)*(s/2)); } }
+    else if(type==='hexagon') { for(let i=0;i<6;i++) ctx.lineTo(x+s*Math.cos(i*Math.PI/3), y+s*Math.sin(i*Math.PI/3)); }
+    ctx.closePath(); ctx.fill();
+}
+
+function showUpgradeMenu() {
+    state = "UPGRADE"; document.getElementById('upgrade-menu').style.display = 'flex';
+    const list = document.getElementById('upgrade-list'); list.innerHTML = '';
+    const pool = [{n:'УРОН', d:'+40%', f:()=>player.dmg*=1.4}, {n:'СКОРОСТЬ', d:'+20%', f:()=>player.spd*=1.2}, {n:'АТАКА', d:'+25% темп', f:()=>player.rate*=0.75}, {n:'ПРОБИТИЕ', d:'Сквозь врагов', f:()=>player.pierce++}, {n:'ВАМПИР', d:'Хил за килл', f:()=>player.killHeal=true}];
+    pool.sort(()=>Math.random()-0.5).slice(0,3).forEach(u => {
+        let b = document.createElement('button'); b.className = 'btn';
+        b.innerHTML = `${u.n}<div class="upg-desc">${u.d}</div>`;
+        b.onclick = () => { u.f(); document.getElementById('upgrade-menu').style.display='none'; state="PLAYING"; };
+        list.appendChild(b);
+    });
+}
+
+function toggleFullScreen() { if(!document.fullscreenElement) document.documentElement.requestFullscreen(); else document.exitFullscreen(); }
+
+window.addEventListener('touchstart', e => { if(e.target.closest('.skill-btn') || e.target.closest('button')) return; joy.active=true; joy.x=e.touches[0].clientX; joy.y=e.touches[0].clientY; joy.touchId=e.touches[0].identifier; });
+window.addEventListener('touchmove', e => { if(!joy.active) return; let t = [...e.changedTouches].find(x => x.identifier === joy.touchId); if(t) { joy.mx=t.clientX-joy.x; joy.my=t.clientY-joy.y; } });
+window.addEventListener('touchend', () => { joy.active=false; joy.mx=0; joy.my=0; });
+
+showLayer('main-menu'); draw();
+</script>
+</body>
+</html>
