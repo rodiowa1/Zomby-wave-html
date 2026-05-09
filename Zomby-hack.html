@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Zomby Waves: Ultimate Final</title>
+    <title>Zomby Waves</title>
     <style>
         body { margin: 0; background: #000; overflow: hidden; font-family: sans-serif; touch-action: none; color: #fff; user-select: none; }
         canvas { display: block; }
@@ -89,6 +89,7 @@
     </div>
 
     <div id="game-ui">
+        <button id="exit-btn" onclick="exitToMenu()" style="pointer-events: auto; position: absolute; top: 120px; right: 0; background: rgba(255,0,0,0.3); border: 1px solid #f00; color: #fff; padding: 5px 10px; border-radius: 5px; cursor: pointer;">ВЫЙТИ</button>
         <div style="display:flex; justify-content:space-between; font-weight:bold; margin-bottom:2px;">
             <span>LVL <span id="lvl-val">1</span></span>
             <span id="boss-timer" style="color:#ff0">БОСС: 60с</span>
@@ -114,23 +115,23 @@
 
 <script>
 const HEROES = [
-    { id: 'survivor', name: 'SURVIVOR', hp: 100, spd: 3.5, rate: 30, dmg: 30, price: 0, desc: 'Базовый герой' },
-    { id: 'runner', name: 'RUNNER', hp: 80, spd: 4.8, rate: 28, dmg: 25, price: 150, desc: 'Очень быстрый' },
-    { id: 'tank', name: 'TANK', hp: 220, spd: 2.6, rate: 35, dmg: 35, price: 300, desc: 'Много здоровья' },
-    { id: 'petmaster', name: 'PET-MASTER', hp: 90, spd: 3.2, rate: 35, dmg: 20, price: 500, desc: 'Дрон-помощник' },
-    { id: 'medic', name: 'MEDIC', hp: 110, spd: 3.4, rate: 32, dmg: 25, price: 600, desc: 'Лечит 50% HP' },
-    { id: 'shielder', name: 'SHIELDER', hp: 130, spd: 3.1, rate: 35, dmg: 25, price: 700, desc: 'Защитный барьер' },
-    { id: 'shocker', name: 'SHOCKER', hp: 100, spd: 3.3, rate: 45, dmg: 22, price: 850, desc: 'Бьет по 3 целям' },
-    { id: 'military', name: 'MILITARY', hp: 120, spd: 3.2, rate: 25, dmg: 40, price: 1100, desc: 'Авиаудар' },
-    { id: 'seeker', name: 'SEEKER', hp: 100, spd: 3.6, rate: 30, dmg: 28, price: 1400, desc: 'Сбор опыта' },
-    { id: 'juggernaut', name: 'JUGGERNAUT', hp: 180, spd: 3.0, rate: 35, dmg: 40, price: 2000, desc: 'Режим ярости' }
-];
+    { id: 'survivor', name: 'SURVIVOR', hp: 100000, spd: 3.5, rate: 30, dmg: 100, price: 0, desc: 'Базовый герой' },
+    { id: 'runner', name: 'RUNNER', hp: 100000, spd: 4.8, rate: 28, dmg: 100, price: 0, desc: 'Очень быстрый' },
+    { id: 'tank', name: 'TANK', hp: 100000, spd: 2.6, rate: 35, dmg: 100, price: 0, desc: 'Много здоровья' },
+    { id: 'petmaster', name: 'PET-MASTER', hp: 100000, spd: 3.2, rate: 35, dmg: 100, price: 0, desc: 'Дрон-помощник' },
+    { id: 'medic', name: 'MEDIC', hp: 100000, spd: 3.4, rate: 32, dmg: 100, price: 0, desc: 'Лечит 50% HP' },
+    { id: 'shielder', name: 'SHIELDER', hp: 100000, spd: 3.1, rate: 35, dmg: 100, price: 0, desc: 'Защитный барьер' },
+    { id: 'shocker', name: 'SHOCKER', hp: 100000, spd: 3.3, rate: 45, dmg: 100, price: 0, desc: 'Бьет по 3 целям' },
+    { id: 'military', name: 'MILITARY', hp: 100000, spd: 3.2, rate: 25, dmg: 100, price: 0, desc: 'Авиаудар' },
+    { id: 'seeker', name: 'SEEKER', hp: 100000, spd: 3.6, rate: 30, dmg: 100, price: 0, desc: 'Сбор опыта' },
+    { id: 'juggernaut', name: 'JUGGERNAUT', hp: 100000, spd: 3.0, rate: 35, dmg: 100, price: 0, desc: 'Режим ярости, самый дорогой класс' }
+];  // надо оставить хотя бы скорость оригинальную :\
 
 const SKINS = {
-    shape: [{id:'circle', name:'Круг', price:0}, {id:'square', name:'Квадрат', price:200}, {id:'triangle', name:'Треугольник', price:300}, {id:'rhombus', name:'Ромб', price:400}, {id:'star', name:'Звезда', price:600}, {id:'hexagon', name:'Гексагон', price:700}],
-    color: [{id:'#fff', name:'Белый', price:0}, {id:'#0ff', name:'Циан', price:150}, {id:'#0f0', name:'Зеленый', price:150}, {id:'#ff0', name:'Золото', price:150}, {id:'#f0f', name:'Пурпур', price:200}, {id:'#f00', name:'Алый', price:200}],
-    bullet: [{id:'#ff0', name:'Желтый', price:0}, {id:'#f00', name:'Красный', price:100}, {id:'#0af', name:'Лед', price:150}, {id:'#0f0', name:'Кислота', price:200}, {id:'rainbow', name:'Радуга', price:1000}]
-};
+    shape: [{id:'circle', name:'Круг', price:0}, {id:'square', name:'Квадрат', price:0}, {id:'triangle', name:'Треугольник', price:0}, {id:'rhombus', name:'Ромб', price:0}, {id:'star', name:'Звезда', price:0}, {id:'hexagon', name:'Гексагон', price:0}],
+    color: [{id:'#fff', name:'Белый', price:0}, {id:'#0ff', name:'Циан', price:0}, {id:'#0f0', name:'Зеленый', price:0}, {id:'#ff0', name:'Золото', price:0}, {id:'#f0f', name:'Пурпур', price:0}, {id:'#f00', name:'Алый', price:0}],
+    bullet: [{id:'#ff0', name:'Желтый', price:0}, {id:'#f00', name:'Красный', price:0}, {id:'#0af', name:'Лед', price:0}, {id:'#0f0', name:'Кислота', price:0}, {id:'rainbow', name:'Радуга', price:0}]
+};  // ЛИКВИДАЦИЯ ЦЕН!!!! СКУПАЙТЕ ПОКА ГОРЯЧЕЕ!!!
 
 let data = JSON.parse(localStorage.getItem('zw_ultimate_v1')) || { pts: 0, owned: ['survivor'], sel: 'survivor', ownedSkins: ['circle', '#fff', '#ff0'], selShape: 'circle', selColor: '#fff', selBullet: '#ff0' };
 function save() { localStorage.setItem('zw_ultimate_v1', JSON.stringify(data)); }
@@ -189,6 +190,31 @@ function startGame() {
     state = "PLAYING"; score = 0; enemies = []; bullets = []; items = []; bossObj = null; startTime = Date.now();
 }
 
+function exitToMenu() {
+    if (confirm("Выйти в меню? Набранные очки будут сохранены! Ты читаешь?")) {
+        // 1. Рассчитываем и сохраняем прогресс
+        let gainedPts = Math.floor(score / 5); // Твоя формула конвертации счета в валюту
+        data.pts += gainedPts;
+        save(); // Записываем в память браузера
+
+        // 2. Останавливаем игру
+        state = "MENU";
+
+        // 3. Убираем интерфейс
+        document.getElementById('game-ui').style.display = 'none';
+        document.getElementById('skill-btn').style.display = 'none';
+
+        // 4. Очищаем мир
+        enemies = [];
+        bullets = [];
+        bossObj = null;
+
+        // 5. Обновляем текст валюты в меню и показываем его
+        document.querySelectorAll('.pts-val').forEach(el => el.innerText = data.pts);
+        showLayer('main-menu');
+    }
+}
+
 function triggerHealEffect() {
     let fx = document.getElementById('heal-fx'); fx.style.opacity = '1';
     setTimeout(() => fx.style.opacity = '0', 600);
@@ -199,10 +225,10 @@ function useSkill() {
     if (btn.classList.contains('cooldown')) return;
     if (player.id === 'military') { screenShake = 40; enemies.slice(0, 15).forEach(en => bullets.push({x: en.x, y: en.y-400, vx: 0, vy: 18, d: 600, c: '#f40', isBomb: true, pierce: 99, hits:[]})); }
     if (player.id === 'juggernaut') { player.dmg *= 2.5; player.spd *= 1.8; player.isHuge = true; setTimeout(() => { player.dmg = player.baseDmg; player.spd = player.baseSpd; player.isHuge = false; }, 6000); }
-    if (player.id === 'medic') { player.hp = Math.min(player.maxHp, player.hp + player.maxHp * 0.5); triggerHealEffect(); }
+    if (player.id === 'medic') { player.hp = Math.min(player.maxHp, player.hp + player.maxHp * 10); triggerHealEffect(); }
     if (player.id === 'shielder') { player.shieldActive = true; setTimeout(() => player.shieldActive = false, 4000); }
     btn.classList.add('cooldown');
-    setTimeout(() => btn.classList.remove('cooldown'), 12000);
+    setTimeout(() => btn.classList.remove('cooldown'), 0);
 }
 
 function getNearestEnemy() {
@@ -217,9 +243,9 @@ function getNearestEnemy() {
 
 function update() {
     if (state !== "PLAYING") return;
-    let elapsed = Date.now() - startTime;
+    let elapsed = Date.now() - startTime;                           // поздравляю! ты нашел меня посреди кода, держи яйцо оленя 🥚🦌
     let diff = 1 + elapsed / 60000;
-    
+
     document.getElementById('hp-fill').style.width = (player.hp / player.maxHp * 100) + "%";
     document.getElementById('hp-text').innerText = `${Math.ceil(player.hp)} / ${Math.ceil(player.maxHp)}`;
     document.getElementById('xp-fill').style.width = (player.xp / player.xpNext * 100) + "%";
@@ -269,11 +295,11 @@ function update() {
         let a = Math.atan2(player.y-en.y, player.x-en.x);
         en.x += Math.cos(a)*en.spd; en.y += Math.sin(a)*en.spd;
         if(Math.hypot(player.x-en.x, player.y-en.y) < en.size+18) {
-            player.hp -= player.shieldActive ? 0.2 : 1.0; screenShake = 6;
+            player.hp += player.shieldActive ? 0.2 : 1.0; screenShake = 6; // должна быть неуязвимость
         }
         if(en.hp <= 0) { 
             enemies.splice(i,1); 
-            let reward = en.isBoss ? 2500 : 25; // УВЕЛИЧЕННАЯ НАГРАДА
+            let reward = en.isBoss ? 2500 : 25;
             score += reward; player.xp += 45; 
             if(en.isBoss) bossObj = null;
             if(player.killHeal && Math.random() < 0.25) { player.hp = Math.min(player.maxHp, player.hp + 8); triggerHealEffect(); }
