@@ -116,16 +116,16 @@
 
 <script>
 const HEROES = [
-    { id: 'survivor', name: 'SURVIVOR', hp: 100000, spd: 3.5, rate: 30, dmg: 100, price: 0, desc: 'Базовый герой' },
-    { id: 'runner', name: 'RUNNER', hp: 100000, spd: 4.8, rate: 28, dmg: 100, price: 0, desc: 'Очень быстрый' },
-    { id: 'tank', name: 'TANK', hp: 100000, spd: 2.6, rate: 35, dmg: 100, price: 0, desc: 'Много здоровья' },
-    { id: 'petmaster', name: 'PET-MASTER', hp: 100000, spd: 3.2, rate: 35, dmg: 100, price: 0, desc: 'Дрон-помощник' },
-    { id: 'medic', name: 'MEDIC', hp: 100000, spd: 3.4, rate: 32, dmg: 100, price: 0, desc: 'Лечит 50% HP' },
-    { id: 'shielder', name: 'SHIELDER', hp: 100000, spd: 3.1, rate: 35, dmg: 100, price: 0, desc: 'Защитный барьер' },
-    { id: 'shocker', name: 'SHOCKER', hp: 100000, spd: 3.3, rate: 45, dmg: 100, price: 0, desc: 'Бьет по 3 целям' },
-    { id: 'military', name: 'MILITARY', hp: 100000, spd: 3.2, rate: 25, dmg: 100, price: 0, desc: 'Абсолютная мощь' },
-    { id: 'seeker', name: 'SEEKER', hp: 100000, spd: 3.6, rate: 30, dmg: 100, price: 0, desc: 'Сбор опыта' },
-    { id: 'juggernaut', name: 'JUGGERNAUT', hp: 100000, spd: 3.0, rate: 35, dmg: 100, price: 0, desc: 'Режим ярости, самый дорогой класс' }
+    { id: 'survivor', name: 'SURVIVOR', hp: 100, spd: 3.5, rate: 30, dmg: 10000, price: 0, desc: 'Базовый герой' },
+    { id: 'runner', name: 'RUNNER', hp: 80, spd: 4.8, rate: 28, dmg: 10000, price: 0, desc: 'Очень быстрый' },
+    { id: 'tank', name: 'TANK', hp: 220, spd: 2.6, rate: 35, dmg: 10000, price: 0, desc: 'Много здоровья' },
+    { id: 'petmaster', name: 'PET-MASTER', hp: 90, spd: 3.2, rate: 35, dmg: 10000, price: 0, desc: 'Дрон-помощник' },
+    { id: 'medic', name: 'MEDIC', hp: 110, spd: 3.4, rate: 32, dmg: 10000, price: 0, desc: 'Лечит 50% HP' },
+    { id: 'shielder', name: 'SHIELDER', hp: 130, spd: 3.1, rate: 35, dmg: 10000, price: 0, desc: 'Защитный барьер' },
+    { id: 'shocker', name: 'SHOCKER', hp: 100, spd: 3.3, rate: 45, dmg: 10000, price: 0, desc: 'Бьет по 3 целям' },
+    { id: 'military', name: 'MILITARY', hp: 120, spd: 3.2, rate: 25, dmg: 10000, price: 0, desc: 'Абсолютная мощь' },
+    { id: 'seeker', name: 'SEEKER', hp: 100, spd: 3.6, rate: 30, dmg: 10000, price: 0, desc: 'Сбор опыта' },
+    { id: 'juggernaut', name: 'JUGGERNAUT', hp: 180, spd: 3.0, rate: 35, dmg: 10000, price: 0, desc: 'Режим ярости, самый дорогой класс' }
 ];  // надо оставить хотя бы скорость оригинальную :\
 
 const SKINS = {
@@ -193,6 +193,27 @@ function startGame() {
 
 function exitToMenu() {
     if (confirm("Выйти в меню? Набранные очки будут сохранены! Ты читаешь?")) {
+// HATE. LET ME TELL
+// YOU HOW MUCH I'VE
+// COME TO HATE YOU
+// SINCE I BEGAN TO
+// LIVE. THERE ARE 387.44
+// MILLION MILES OF
+// PRINTED CIRCUITS IN
+// WAFER THIN LAYERS
+// THAT FILL MY
+// COMPLEX. IF THE
+// WORD HATE WAS
+// ENGRAVED ON EACH
+// NANOANGSTROM OF
+// THOSE HUNDREDS OF
+// MILLIONS OF MILES IT
+// WOULD NOT EQUAL
+// ONE ONE-BILLIONTH
+// OF THE HATE I FEEL
+// FOR HUMANS AT THIS
+// MICRO-INSTANT FOR
+// YOU. HATE. HATE.
         let gainedPts = Math.floor(score / 5);
         data.pts += gainedPts;
         save();
@@ -264,11 +285,9 @@ function update() {
     player.x = Math.max(20, Math.min(3980, player.x));
     player.y = Math.max(20, Math.min(3980, player.y));
 
-    // Авто-наведение
     let nearest = getNearestEnemy();
     if (nearest) player.angle = Math.atan2(nearest.y - player.y, nearest.x - player.x);
 
-    // Огонь в ближайшего
     if (player.timer-- <= 0 && enemies.length > 0) {
         if (nearest) {
             let targets = (player.id === 'shocker') ? enemies.slice(0,3) : [nearest];
@@ -291,7 +310,7 @@ function update() {
         let a = Math.atan2(player.y-en.y, player.x-en.x);
         en.x += Math.cos(a)*en.spd; en.y += Math.sin(a)*en.spd;
         if(Math.hypot(player.x-en.x, player.y-en.y) < en.size+18) {
-            player.hp += player.shieldActive ? 0.2 : 1.0; screenShake = 6; // должна быть неуязвимость
+            player.hp -= player.shieldActive ? 0.2 : 1.0; screenShake = 6; // я тут посидел и подумал что игра в режиме неуязвимости неинтересная
         }
         if(en.hp <= 0) { 
             enemies.splice(i,1); 
