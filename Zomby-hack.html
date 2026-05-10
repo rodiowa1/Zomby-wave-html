@@ -193,24 +193,19 @@ function startGame() {
 
 function exitToMenu() {
     if (confirm("Выйти в меню? Набранные очки будут сохранены! Ты читаешь?")) {
-        // 1. Рассчитываем и сохраняем прогресс
-        let gainedPts = Math.floor(score / 5); // Твоя формула конвертации счета в валюту
+        let gainedPts = Math.floor(score / 5);
         data.pts += gainedPts;
-        save(); // Записываем в память браузера
-
-        // 2. Останавливаем игру
+        save();
+        
         state = "MENU";
 
-        // 3. Убираем интерфейс
         document.getElementById('game-ui').style.display = 'none';
         document.getElementById('skill-btn').style.display = 'none';
 
-        // 4. Очищаем мир
         enemies = [];
         bullets = [];
         bossObj = null;
 
-        // 5. Обновляем текст валюты в меню и показываем его
         document.querySelectorAll('.pts-val').forEach(el => el.innerText = data.pts);
         showLayer('main-menu');
     }
